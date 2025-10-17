@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gerador Black Friday — Preço com Cupom Embutido</title>
+<style>
+  :root{--bg:#0b1220;--card:#101a2d;--accent:#22c55e;--text:#e5e7eb;--muted:#9ca3af;--shadow:0 10px 30px rgba(0,0,0,.35);--r:16px}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;background:linear-gradient(180deg,#0a0f1a,#0b1220);color:var(--text);min-height:100svh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .wrap{width:100%;max-width:1000px;display:grid;gap:20px;grid-template-columns:1.05fr .95fr}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.06);box-shadow:var(--shadow);border-radius:var(--r)}
+  .panel{padding:22px}
+  h1{margin:0 0 6px;font-size:20px;font-weight:800}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+  label{display:block;font-size:13px;color:#cbd5e1;margin-bottom:6px}
+  input[type="number"]{width:100%;padding:14px;border-radius:12px;background:#0b1426;color:#fff;border:1px solid rgba(255,255,255,.08);font-size:16px;outline:none}
+  .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+  @media (max-width:600px){.row{grid-template-columns:1fr}}
+  .help{font-size:12px;color:#94a3b8;margin-top:6px}
+  .switch{display:flex;gap:10px;align-items:center;margin-top:10px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  button{border:none;cursor:pointer;border-radius:12px;padding:14px 16px;font-weight:800;font-size:15px}
+  .btn-go{background:var(--accent);color:#052e14}
+  .btn-ghost{background:transparent;color:#cbd5e1;border:1px solid rgba(255,255,255,.1)}
+  .result{overflow:hidden}
+  .hero{padding:20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .price{font-size:34px;font-weight:900}
+  .pill{color:#a7f3d0;font-size:12px;border:1px dashed rgba(255,255,255,.25);padding:6px 10px;border-radius:999px}
+  .grid{display:grid;gap:10px;padding:14px;grid-template-columns:1fr 1fr}
+  @media (max-width:700px){.grid{grid-template-columns:1fr}}
+  .kpi{background:#0b1426;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px}
+  .k{font-size:12px;color:#9ca3af}.v{font-size:18px;font-weight:800;margin-top:6px}
+  .note{padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);font-size:12px;color:#9ca3af}
+  .ok{color:#22c55e;font-size:13px;margin-top:8px}.err{color:#ef4444;font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <!-- FORM -->
+  <section class="card panel">
+    <h1>Gerador BF — Cupom Embutido (+R$)</h1>
+    <p class="sub">Afiliado 6% • NF 5% (opcional) • Entrega R$ 50. Lucro líquido por faixa: até 1499 = 10%, 1500–2999 = 12%, 3000+ = 14%.</p>
+
+    <div class="row" style="margin-top:8px">
+      <div>
+        <label for="custo">Custo do produto (R$)</label>
+        <input type="number" id="custo" placeholder="Ex: 485" step="0.01" min="0">
+        <div class="help">Custo de aquisição.</div>
+      </div>
+      <div>
+        <label for="entrega">Entrega (R$)</label>
+        <input type="number" id="entrega" value="50" step="0.01" min="0">
+        <div class="help">Padrão R$ 50 (ajustável).</div>
+      </div>
+    </div>
+
+    <div class="switch">
+      <input type="checkbox" id="chkNF" checked>
+      <label for="chkNF">Considerar Nota Fiscal (5%)</label>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <div>
+        <label for="cupom">Cupom (R$) — embutir no preço</label>
+        <input type="number" id="cupom" value="20" step="0.01" min="0">
+        <div class="help">Padrão R$ 20,00 — usado para AUMENTAR o preço exibido. Ao aplicar o cupom ao cliente, o valor volta.</div>
+      </div>
+      <div>
+        <label for="exibirSemNF">Exibição</label>
+        <input type="checkbox" id="exibirSemNF" checked>
+        <span class="help">Marque para simular “sem NF” rapidamente (override do toggle acima).</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-go" id="btnCalc">Calcular</button>
+      <button class="btn-ghost" id="btnClear">Limpar</button>
+    </div>
+
+    <div id="msg" class="ok" style="display:none"></div>
+    <div id="err" class="err" style="display:none"></div>
+  </section>
+
+  <!-- RESULTADO -->
+  <section class="card result" id="cardRes" style="display:none">
+    <div class="hero">
+      <div>
+        <div class="pill" id="faixaTag">Faixa: —</div>
+        <div class="price" id="precoEtiqueta">R$ 0,00</div>
+        <div class="help" style="margin-top:6px">Preço com cupom aplicado (PIX/dinheiro): <b id="precoComCupom"></b></div>
+      </div>
+      <div class="pill" id="pill">Afiliado 6% • NF 5% • Entrega R$ 50,00 • Cupom +R$ 20,00</div>
+    </div>
+
+    <div class="grid">
+      <div class="kpi"><div class="k">Lucro líquido (na venda com cupom)</div><div class="v" id="vLucro">R$ 0,00</div></div>
+      <div class="kpi"><div class="k">Margem da faixa (alvo)</div><div class="v" id="vPerc">0%</div></div>
+      <div class="kpi"><div class="k">Comissão Afiliado (6%)</div><div class="v" id="vAfi">R$ 0,00</div></div>
+      <div class="kpi"><div class="k">Nota Fiscal (5%)</div><div class="v" id="vNF">R$ 0,00</div></div>
+      <div class="kpi"><div class="k">Entrega (fixo)</div><div class="v" id="vEnt">R$ 50,00</div></div>
+      <div class="kpi"><div class="k">Custo do produto</div><div class="v" id="vCusto">R$ 0,00</div></div>
+    </div>
+
+    <div class="note" id="notaFormula"></div>
+  </section>
+</main>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const brl = n => (isFinite(n)?n:0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+
+  // Fixos
+  const pAfi = 0.06;
+  const pNF  = 0.05;
+
+  // Por faixa, a % de LUCRO LÍQUIDO alvo (sobre preço de venda real)
+  function pByX(X){
+    if (X < 1500) return 0.10;
+    if (X < 3000) return 0.12;
+    return 0.14;
+  }
+
+  // Resolve X = preço DE VENDA (com cupom aplicado), consistente com a faixa:
+  // (1 - (afiliado + NF + pLucro)) * X = Custo + Entrega
+  function solveVenda(custo, entrega, usaNF){
+    const taxas = pAfi + (usaNF ? pNF : 0); // 0.06 ou 0.11
+    if (taxas >= 1) throw new Error('Soma de taxas inválida.');
+    let p = 0.10, X = 0;
+    for (let i=0;i<8;i++){
+      const denom = 1 - (taxas + p);
+      if (denom <= 0) throw new Error('Margem total ≥ 100%. Ajuste as taxas.');
+      X = (custo + entrega) / denom;
+      const newP = pByX(X);
+      if (Math.abs(newP - p) < 1e-9) break;
+      p = newP;
+    }
+    return { X, p, taxas };
+  }
+
+  const UI = {
+    custo: el('custo'), entrega: el('entrega'), chkNF: el('chkNF'), exibirSemNF: el('exibirSemNF'),
+    cupom: el('cupom'),
+    btnCalc: el('btnCalc'), btnClear: el('btnClear'),
+    msg: el('msg'), err: el('err'),
+    cardRes: el('cardRes'),
+    precoEtiqueta: el('precoEtiqueta'), precoComCupom: el('precoComCupom'),
+    vLucro: el('vLucro'), vPerc: el('vPerc'),
+    vAfi: el('vAfi'), vNF: el('vNF'), vEnt: el('vEnt'), vCusto: el('vCusto'),
+    pill: el('pill'), notaFormula: el('notaFormula'), faixaTag: el('faixaTag'),
+  };
+
+  function calcular(){
+    UI.msg.style.display='none'; UI.err.style.display='none';
+
+    const C = parseFloat((UI.custo.value||'').replace(',','.'))||0;
+    const E = parseFloat((UI.entrega.value||'').replace(',','.'))||0;
+    const cupomAdd = parseFloat((UI.cupom.value||'').replace(',','.'))||0;
+    const usaNF = UI.exibirSemNF.checked ? false : UI.chkNF.checked;
+
+    if (C < 0 || E < 0 || cupomAdd < 0) { UI.err.textContent = 'Valores não podem ser negativos.'; UI.err.style.display='block'; return; }
+
+    try{
+      // 1) Calcula preço DE VENDA (com cupom aplicado) — é o preço real da transação
+      const {X, p, taxas} = solveVenda(C, E, usaNF);
+
+      // 2) Preço de ETIQUETA (sem cupom) embutindo +R$ cupom
+      const etiqueta = X + cupomAdd;
+
+      // 3) Componentes calculados sobre o preço real (com cupom) — não mexe no lucro
+      const afi = pAfi * X;
+      const nf  = (usaNF? pNF * X : 0);
+      const lucro = X - afi - nf - E - C; // = p * X (dentro de arredondamento)
+
+      // Render
+      UI.cardRes.style.display = 'block';
+      UI.precoEtiqueta.textContent = brl(etiqueta);
+      UI.precoComCupom.textContent = brl(X);
+
+      UI.vLucro.textContent = brl(lucro);
+      UI.vPerc.textContent  = (p*100).toFixed(0) + '%';
+      UI.vAfi.textContent   = brl(afi);
+      UI.vNF.textContent    = brl(nf);
+      UI.vEnt.textContent   = brl(E);
+      UI.vCusto.textContent = brl(C);
+
+      UI.faixaTag.textContent = `Faixa (preço com cupom): ${X < 1500 ? '10%' : (X < 3000 ? '12%' : '14%')}`;
+      UI.pill.textContent = `Afiliado 6% • ${usaNF?'NF 5% • ':''}Entrega ${brl(E)} • Cupom embutido +${brl(cupomAdd)}`;
+
+      UI.notaFormula.innerHTML =
+        `Preço de venda (com cupom) X resolve: <span class="muted">(1 − (Afiliado 6%${usaNF? ' + NF 5%':''} + Lucro ${ (p*100).toFixed(0) }%)) · X = Custo + Entrega</span><br>
+         X = (Custo + Entrega) ÷ (1 − (${((taxas)*100).toFixed(0)}% + ${(p*100).toFixed(0)}%))<br>
+         Preço de etiqueta exibido ao cliente: <b>X + Cupom</b> = ${brl(X)} + ${brl(cupomAdd)} = <b>${brl(etiqueta)}</b><br>
+         Ao aplicar o cupom, o valor volta para ${brl(X)} (sem reduzir sua margem).`;
+
+      UI.msg.textContent = 'Cálculo concluído.'; UI.msg.style.display='block';
+    }catch(err){
+      UI.err.textContent = err.message;
+      UI.err.style.display='block';
+    }
+  }
+
+  function limpar(){
+    UI.custo.value=''; UI.entrega.value='50'; UI.chkNF.checked=true; UI.exibirSemNF.checked=false; UI.cupom.value='20';
+    UI.cardRes.style.display='none'; UI.msg.style.display='none'; UI.err.style.display='none';
+  }
+
+  UI.btnCalc.addEventListener('click', calcular);
+  UI.btnClear.addEventListener('click', limpar);
+  ['custo','entrega','cupom'].forEach(id=> document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') calcular(); }));
+})();
+</script>
+</body>
+</html>
